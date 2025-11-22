@@ -1,9 +1,7 @@
 package com.stockmaster.repository;
 
-<<<<<<< Updated upstream
 import org.springframework.stereotype.Repository;
 
-=======
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +12,6 @@ import com.stockmaster.entity.Adjustment;
 import com.stockmaster.entity.Receipt;
 import com.stockmaster.entity.Warehouse;
 
->>>>>>> Stashed changes
 @Repository
 public interface AdjustmentRepository extends JpaRepository<Adjustment, Long> {
     Optional<Adjustment> findByAdjustmentNumber(String adjustmentNumber);
