@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Menu, Bell, Search } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar = ({ onMenuClick }) => {
   const { user } = useContext(AuthContext);
