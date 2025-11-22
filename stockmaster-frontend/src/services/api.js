@@ -1,5 +1,32 @@
-// src/services/api.js
 const API_BASE_URL = 'http://localhost:8083/api';
+
+const handleResponse = async (response) => {
+  if (response.status === 401) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+    throw new Error('Session expired. Please login again.');
+  }
+
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
+  
+  if (!response.ok) {
+    if (isJson) {
+      const error = await response.json();
+      throw new Error(error.message || error.error || 'Request failed');
+    } else {
+      const text = await response.text();
+      throw new Error(text || `HTTP error! status: ${response.status}`);
+    }
+  }
+  
+  if (isJson) {
+    return await response.json();
+  } else {
+    return await response.text();
+  }
+};
 
 const api = {
   async request(method, url, data = null) {
@@ -9,12 +36,13 @@ const api = {
     };
     
     if (token) {
-      headers.Authorization = `Bearer ${token}`;
+      headers['Authorization'] = `Bearer ${token}`;
     }
     
     const options = {
       method,
-      headers
+      headers,
+      mode: 'cors'
     };
     
     if (data && method !== 'GET') {
@@ -23,31 +51,10 @@ const api = {
     
     try {
       const response = await fetch(`${API_BASE_URL}${url}`, options);
-      
-      // Handle 401 Unauthorized
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        throw new Error('Unauthorized');
-      }
-      
-      // Handle other error responses
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
-        throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
-      }
-      
-      // Handle empty responses
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const result = await response.json();
-        return { data: result };
-      }
-      
-      return { data: null };
+      const result = await handleResponse(response);
+      return { data: result };
     } catch (error) {
-      console.error('API Error:', error);
+      console.error(`API Error [${method} ${url}]:`, error.message);
       throw error;
     }
   },
@@ -66,6 +73,10 @@ const api = {
   
   delete(url) {
     return this.request('DELETE', url);
+  },
+
+  patch(url, data) {
+    return this.request('PATCH', url, data);
   }
 };
 

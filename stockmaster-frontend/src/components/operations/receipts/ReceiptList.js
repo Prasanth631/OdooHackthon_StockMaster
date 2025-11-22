@@ -20,34 +20,58 @@ const ReceiptList = () => {
   }, [statusFilter]);
 
   const fetchReceipts = async () => {
+    setLoading(true);
     try {
       const response = await receiptService.getAll({ status: statusFilter });
-      setReceipts(response.data);
+      setReceipts(response.data || []);
     } catch (error) {
       console.error('Failed to fetch receipts:', error);
+      setReceipts([]);
     } finally {
       setLoading(false);
     }
   };
 
   const columns = [
-    { key: 'documentNumber', title: 'Document #' },
-    { key: 'supplier', title: 'Supplier' },
-    { key: 'warehouse', title: 'Warehouse' },
+    { 
+      key: 'receiptNumber', 
+      title: 'Document #',
+      render: (value, row) => value || row.documentNumber || '-'
+    },
+    { 
+      key: 'supplierName', 
+      title: 'Supplier',
+      render: (value, row) => value || row.supplier || '-'
+    },
+    { 
+      key: 'warehouse', 
+      title: 'Warehouse',
+      render: (value, row) => {
+        if (typeof value === 'object' && value?.name) return value.name;
+        if (typeof value === 'string') return value;
+        return row.warehouseName || '-';
+      }
+    },
     {
-      key: 'items',
+      key: 'lines',
       title: 'Items',
-      render: (items) => `${items?.length || 0} item(s)`
+      render: (lines, row) => {
+        const items = lines || row.items || [];
+        return `${items.length} item(s)`;
+      }
     },
     {
       key: 'createdAt',
       title: 'Date',
-      render: (date) => formatDate(date)
+      render: (date) => date ? formatDate(date) : '-'
     },
     {
       key: 'status',
       title: 'Status',
-      render: (status) => <Badge status={status}>{status}</Badge>
+      render: (status) => {
+        const displayStatus = status?.toLowerCase() || 'draft';
+        return <Badge status={displayStatus}>{displayStatus}</Badge>;
+      }
     },
     {
       key: 'actions',
@@ -81,7 +105,6 @@ const ReceiptList = () => {
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow">
         <Filter size={20} className="text-gray-400" />
         <select

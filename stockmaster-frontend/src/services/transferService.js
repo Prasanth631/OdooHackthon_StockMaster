@@ -1,118 +1,83 @@
-// src/services/transferService.js
 import api from './api';
 
 const transferService = {
   getAll: async (filters = {}) => {
     try {
-      const response = await api.get('/transfers');
-      let transfers = response.data;
+      let url = '/transfers';
+      const params = new URLSearchParams();
       
-      // Apply status filter if provided
       if (filters.status) {
-        transfers = transfers.filter(t => 
-          t.status.toLowerCase() === filters.status.toLowerCase()
-        );
+        params.append('status', filters.status.toUpperCase());
       }
       
-      // Map backend response to frontend format
-      const mapped = transfers.map(t => ({
-        id: t.id,
-        documentNumber: t.transferNumber,
-        sourceWarehouse: t.sourceWarehouse?.name || t.sourceWarehouseName || 'N/A',
-        destinationWarehouse: t.destinationWarehouse?.name || t.destinationWarehouseName || 'N/A',
-        status: t.status.toLowerCase(),
-        items: (t.lines || []).map(line => ({
-          productId: line.productId,
-          productName: line.productName,
-          quantity: line.quantityTransferred,
-          unit: line.product?.unitOfMeasure || 'pcs'
-        })),
-        createdAt: t.createdAt,
-        completedAt: t.transferredDate,
-        notes: t.notes || ''
-      }));
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
       
-      return { data: mapped };
+      const response = await api.get(url);
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to fetch transfers:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to fetch transfers');
     }
   },
 
   getById: async (id) => {
     try {
       const response = await api.get(`/transfers/${id}`);
-      const t = response.data;
-      
-      return {
-        data: {
-          id: t.id,
-          documentNumber: t.transferNumber,
-          sourceWarehouse: t.sourceWarehouse?.name || t.sourceWarehouseName || 'N/A',
-          destinationWarehouse: t.destinationWarehouse?.name || t.destinationWarehouseName || 'N/A',
-          status: t.status.toLowerCase(),
-          items: (t.lines || []).map(line => ({
-            productId: line.productId,
-            productName: line.productName,
-            quantity: line.quantityTransferred,
-            unit: line.product?.unitOfMeasure || 'pcs'
-          })),
-          createdAt: t.createdAt,
-          completedAt: t.transferredDate,
-          notes: t.notes || ''
-        }
-      };
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to fetch transfer:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to fetch transfer');
     }
   },
 
   create: async (transferData) => {
     try {
-      // Backend expects Transfer entity structure
+      const user = JSON.parse(localStorage.getItem('user'));
+      
       const payload = {
-        sourceWarehouse: { id: 1 }, // You'll need to get actual warehouse IDs
-        sourceLocation: { id: 1 },
-        destinationWarehouse: { id: 2 },
-        destinationLocation: { id: 2 },
+        sourceWarehouse: {
+          id: transferData.sourceWarehouseId || 1
+        },
+        sourceLocation: transferData.sourceLocationId ? {
+          id: transferData.sourceLocationId
+        } : null,
+        destinationWarehouse: {
+          id: transferData.destinationWarehouseId || 2
+        },
+        destinationLocation: transferData.destinationLocationId ? {
+          id: transferData.destinationLocationId
+        } : null,
+        scheduledDate: transferData.scheduledDate || new Date().toISOString(),
         notes: transferData.notes || '',
+        createdBy: {
+          id: user?.id || 1
+        },
         lines: transferData.items.map(item => ({
-          product: { id: item.productId },
-          quantity: item.quantity,
-          quantityTransferred: item.quantity
+          product: {
+            id: item.productId
+          },
+          quantity: parseFloat(item.quantity),
+          quantityTransferred: 0,
+          batchNumber: item.batchNumber || '',
+          serialNumber: item.serialNumber || '',
+          notes: item.notes || ''
         }))
       };
       
       const response = await api.post('/transfers', payload);
-      return response;
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to create transfer:', error);
-      throw error;
-    }
-  },
-
-  update: async (id, transferData) => {
-    try {
-      const response = await api.put(`/transfers/${id}`, transferData);
-      return response;
-    } catch (error) {
-      console.error('Failed to update transfer:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to create transfer');
     }
   },
 
   complete: async (id) => {
     try {
-      // Get current user ID from localStorage
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user.id || 1;
-      
-      const response = await api.post(`/transfers/${id}/validate?userId=${userId}`);
-      return response;
+      const user = JSON.parse(localStorage.getItem('user'));
+      const response = await api.post(`/transfers/${id}/validate?userId=${user?.id || 1}`);
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to complete transfer:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to complete transfer');
     }
   },
 
@@ -120,22 +85,11 @@ const transferService = {
     try {
       const response = await api.get('/transfers');
       const scheduled = response.data.filter(t => 
-        t.status === 'WAITING' || t.status === 'READY' || t.status === 'DRAFT'
+        t.status === 'WAITING' || t.status === 'READY'
       );
       return { data: scheduled };
     } catch (error) {
-      console.error('Failed to fetch scheduled transfers:', error);
-      return { data: [] };
-    }
-  },
-
-  delete: async (id) => {
-    try {
-      const response = await api.delete(`/transfers/${id}`);
-      return response;
-    } catch (error) {
-      console.error('Failed to delete transfer:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to fetch scheduled transfers');
     }
   }
 };

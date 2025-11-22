@@ -1,52 +1,21 @@
-// src/services/warehouseService.js
 import api from './api';
 
 const warehouseService = {
   getAll: async () => {
     try {
       const response = await api.get('/warehouses');
-      
-      // Map backend response to frontend format
-      const mapped = response.data.map(w => ({
-        id: w.id,
-        name: w.name,
-        address: `${w.address || ''}, ${w.city || ''}, ${w.state || ''}`.trim(),
-        code: w.code,
-        city: w.city,
-        state: w.state,
-        zipCode: w.zipCode,
-        country: w.country,
-        isActive: w.active
-      }));
-      
-      return { data: mapped };
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to fetch warehouses:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to fetch warehouses');
     }
   },
 
   getById: async (id) => {
     try {
       const response = await api.get(`/warehouses/${id}`);
-      const w = response.data;
-      
-      return {
-        data: {
-          id: w.id,
-          name: w.name,
-          address: w.address,
-          code: w.code,
-          city: w.city,
-          state: w.state,
-          zipCode: w.zipCode,
-          country: w.country,
-          isActive: w.active
-        }
-      };
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to fetch warehouse:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to fetch warehouse');
     }
   },
 
@@ -54,20 +23,19 @@ const warehouseService = {
     try {
       const payload = {
         name: warehouseData.name,
-        code: `WH-${Date.now().toString().slice(-6)}`, // Generate code
-        address: warehouseData.address,
+        code: warehouseData.code || warehouseData.name.substring(0, 3).toUpperCase() + Date.now().toString().slice(-4),
+        address: warehouseData.address || '',
         city: warehouseData.city || '',
         state: warehouseData.state || '',
         zipCode: warehouseData.zipCode || '',
-        country: warehouseData.country || 'USA',
+        country: warehouseData.country || '',
         active: true
       };
       
       const response = await api.post('/warehouses', payload);
-      return response;
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to create warehouse:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to create warehouse');
     }
   },
 
@@ -75,29 +43,27 @@ const warehouseService = {
     try {
       const payload = {
         name: warehouseData.name,
-        address: warehouseData.address,
+        address: warehouseData.address || '',
         city: warehouseData.city || '',
         state: warehouseData.state || '',
         zipCode: warehouseData.zipCode || '',
-        country: warehouseData.country || 'USA',
-        active: warehouseData.isActive !== undefined ? warehouseData.isActive : true
+        country: warehouseData.country || '',
+        active: warehouseData.active !== undefined ? warehouseData.active : true
       };
       
       const response = await api.put(`/warehouses/${id}`, payload);
-      return response;
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to update warehouse:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to update warehouse');
     }
   },
 
   delete: async (id) => {
     try {
-      const response = await api.delete(`/warehouses/${id}`);
-      return response;
+      await api.delete(`/warehouses/${id}`);
+      return { data: { success: true } };
     } catch (error) {
-      console.error('Failed to delete warehouse:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to delete warehouse');
     }
   }
 };

@@ -1,4 +1,3 @@
-// src/components/auth/Signup.js
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -26,7 +25,6 @@ const Signup = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
 
-    // Check password strength
     if (name === 'password') {
       checkPasswordStrength(value);
     }
@@ -50,25 +48,21 @@ const Signup = () => {
   };
 
   const validateForm = () => {
-    // Validate name
     if (!formData.name || formData.name.trim().length < 2) {
       setError('Please enter a valid full name (minimum 2 characters)');
       return false;
     }
 
-    // Validate email
     if (!formData.email || !formData.email.includes('@')) {
       setError('Please enter a valid email address');
       return false;
     }
 
-    // Validate password
     if (!formData.password || formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
       return false;
     }
 
-    // Validate password match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;
@@ -80,7 +74,6 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form
     if (!validateForm()) {
       return;
     }
@@ -89,7 +82,6 @@ const Signup = () => {
     setError('');
 
     try {
-      // Call backend API - backend expects: { email, password, fullName, role }
       const response = await authService.signup({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
@@ -97,30 +89,13 @@ const Signup = () => {
         role: formData.role
       });
 
-      // Backend returns: { userId, email, fullName, role, token }
-      const { token, ...userData } = response.data;
+      login(response.data.user, response.data.token);
 
-      // Update context with user data and token
-      login(userData, token);
-
-      // Navigate to dashboard
       navigate('/dashboard');
       
     } catch (err) {
       console.error('Signup error:', err);
-      
-      // Handle different error types
-      let errorMessage = 'Signup failed. Please try again.';
-      
-      if (err.message) {
-        errorMessage = err.message;
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (typeof err.response?.data === 'string') {
-        errorMessage = err.response.data;
-      }
-      
-      setError(errorMessage);
+      setError(err.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -147,15 +122,12 @@ const Signup = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-8">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-blue-600">StockMaster</h1>
           <p className="text-gray-500 mt-2">Create your account</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Error Alert */}
           {error && (
             <Alert 
               variant="error" 
@@ -165,7 +137,6 @@ const Signup = () => {
             />
           )}
 
-          {/* Full Name Input */}
           <Input
             label="Full Name"
             name="name"
@@ -177,7 +148,6 @@ const Signup = () => {
             autoComplete="name"
           />
 
-          {/* Email Input */}
           <Input
             label="Email"
             type="email"
@@ -189,7 +159,6 @@ const Signup = () => {
             autoComplete="email"
           />
 
-          {/* Role Selection */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Role <span className="text-red-500">*</span>
@@ -198,9 +167,7 @@ const Signup = () => {
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 
-                       focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
               <option value="WAREHOUSE_STAFF">Warehouse Staff</option>
@@ -209,7 +176,6 @@ const Signup = () => {
             </select>
           </div>
 
-          {/* Password Input */}
           <Input
             label="Password"
             type="password"
@@ -221,7 +187,6 @@ const Signup = () => {
             autoComplete="new-password"
           />
 
-          {/* Password Strength Indicator */}
           {formData.password && (
             <div className="mb-4 -mt-2">
               <div className="flex items-center justify-between mb-1">
@@ -242,7 +207,6 @@ const Signup = () => {
             </div>
           )}
 
-          {/* Confirm Password Input */}
           <Input
             label="Confirm Password"
             type="password"
@@ -254,19 +218,16 @@ const Signup = () => {
             autoComplete="new-password"
           />
 
-          {/* Submit Button */}
           <Button 
             type="submit" 
             className="w-full mt-2" 
             loading={loading}
-            disabled={loading || !formData.name || !formData.email || 
-                     !formData.password || !formData.confirmPassword}
+            disabled={loading || !formData.name || !formData.email || !formData.password || !formData.confirmPassword}
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
 
-        {/* Login Link */}
         <p className="text-center text-gray-600 mt-6">
           Already have an account?{' '}
           <Link 
@@ -277,7 +238,6 @@ const Signup = () => {
           </Link>
         </p>
 
-        {/* Terms Notice */}
         <p className="text-xs text-gray-500 text-center mt-4">
           By creating an account, you agree to our{' '}
           <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>

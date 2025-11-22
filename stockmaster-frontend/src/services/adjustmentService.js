@@ -1,131 +1,89 @@
-// src/services/adjustmentService.js
 import api from './api';
 
 const adjustmentService = {
   getAll: async (filters = {}) => {
     try {
-      const response = await api.get('/adjustments');
-      let adjustments = response.data;
+      let url = '/adjustments';
+      const params = new URLSearchParams();
       
-      // Apply status filter if provided
       if (filters.status) {
-        adjustments = adjustments.filter(a => 
-          a.status.toLowerCase() === filters.status.toLowerCase()
-        );
+        params.append('status', filters.status.toUpperCase());
       }
       
-      // Map backend response to frontend format
-      const mapped = adjustments.map(a => {
-        const firstLine = a.lines?.[0] || {};
-        return {
-          id: a.id,
-          documentNumber: a.adjustmentNumber,
-          productId: firstLine.productId,
-          productName: firstLine.productName || 'N/A',
-          warehouse: a.warehouse?.name || a.warehouseName || 'N/A',
-          previousQuantity: firstLine.systemQuantity || 0,
-          countedQuantity: firstLine.countedQuantity || 0,
-          difference: firstLine.differenceQuantity || 0,
-          reason: a.reason || '',
-          status: a.status.toLowerCase(),
-          createdAt: a.createdAt,
-          approvedAt: a.adjustmentDate,
-          approvedBy: a.validatedBy?.fullName || ''
-        };
-      });
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
       
-      return { data: mapped };
+      const response = await api.get(url);
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to fetch adjustments:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to fetch adjustments');
     }
   },
 
   getById: async (id) => {
     try {
       const response = await api.get(`/adjustments/${id}`);
-      const a = response.data;
-      const firstLine = a.lines?.[0] || {};
-      
-      return {
-        data: {
-          id: a.id,
-          documentNumber: a.adjustmentNumber,
-          productId: firstLine.productId,
-          productName: firstLine.productName || 'N/A',
-          warehouse: a.warehouse?.name || a.warehouseName || 'N/A',
-          previousQuantity: firstLine.systemQuantity || 0,
-          countedQuantity: firstLine.countedQuantity || 0,
-          difference: firstLine.differenceQuantity || 0,
-          reason: a.reason || '',
-          status: a.status.toLowerCase(),
-          createdAt: a.createdAt,
-          approvedAt: a.adjustmentDate,
-          approvedBy: a.validatedBy?.fullName || ''
-        }
-      };
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to fetch adjustment:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to fetch adjustment');
     }
   },
 
   create: async (adjustmentData) => {
     try {
-      // Backend expects Adjustment entity structure
+      const user = JSON.parse(localStorage.getItem('user'));
+      
       const payload = {
-        warehouse: { id: 1 }, // You'll need to get actual warehouse ID
-        location: null,
-        type: 'PHYSICAL_COUNT', // or OTHER, DAMAGE, LOSS, FOUND
+        warehouse: {
+          id: adjustmentData.warehouseId || 1
+        },
+        location: adjustmentData.locationId ? {
+          id: adjustmentData.locationId
+        } : null,
+        type: adjustmentData.type || 'PHYSICAL_COUNT',
         reason: adjustmentData.reason,
+        adjustmentDate: new Date().toISOString(),
+        notes: adjustmentData.notes || '',
+        createdBy: {
+          id: user?.id || 1
+        },
         lines: [{
-          product: { id: adjustmentData.productId },
-          systemQuantity: adjustmentData.previousQuantity,
-          countedQuantity: adjustmentData.countedQuantity,
-          differenceQuantity: adjustmentData.countedQuantity - adjustmentData.previousQuantity
+          product: {
+            id: adjustmentData.productId
+          },
+          systemQuantity: parseFloat(adjustmentData.previousQuantity),
+          countedQuantity: parseFloat(adjustmentData.countedQuantity),
+          differenceQuantity: parseFloat(adjustmentData.countedQuantity) - parseFloat(adjustmentData.previousQuantity),
+          batchNumber: adjustmentData.batchNumber || '',
+          serialNumber: adjustmentData.serialNumber || '',
+          notes: adjustmentData.notes || ''
         }]
       };
       
       const response = await api.post('/adjustments', payload);
-      return response;
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to create adjustment:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to create adjustment');
     }
   },
 
   approve: async (id, approvedBy) => {
     try {
-      // Get current user ID from localStorage
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user.id || 1;
-      
-      const response = await api.post(`/adjustments/${id}/validate?userId=${userId}`);
-      return response;
+      const user = JSON.parse(localStorage.getItem('user'));
+      const response = await api.post(`/adjustments/${id}/validate?userId=${user?.id || 1}`);
+      return { data: response.data };
     } catch (error) {
-      console.error('Failed to approve adjustment:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to approve adjustment');
     }
   },
 
   cancel: async (id) => {
     try {
-      // Backend doesn't have a cancel endpoint, use delete
-      const response = await api.delete(`/adjustments/${id}`);
-      return response;
+      await api.delete(`/adjustments/${id}`);
+      return { data: { success: true } };
     } catch (error) {
-      console.error('Failed to cancel adjustment:', error);
-      throw error;
-    }
-  },
-
-  delete: async (id) => {
-    try {
-      const response = await api.delete(`/adjustments/${id}`);
-      return response;
-    } catch (error) {
-      console.error('Failed to delete adjustment:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to cancel adjustment');
     }
   }
 };

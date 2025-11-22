@@ -1,4 +1,3 @@
-// src/components/auth/Login.js
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -27,7 +26,6 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate inputs
     if (!formData.email || !formData.password) {
       setError('Please enter both email and password');
       return;
@@ -47,16 +45,10 @@ const Login = () => {
     setError('');
 
     try {
-      // Call backend API
       const response = await authService.login(formData.email, formData.password);
       
-      // Backend returns: { userId, email, fullName, role, token }
-      const { token, ...userData } = response.data;
+      login(response.data.user, response.data.token);
 
-      // Update context with user data and token
-      login(userData, token);
-
-      // Remember me functionality
       if (rememberMe) {
         localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('rememberedEmail', formData.email);
@@ -65,30 +57,16 @@ const Login = () => {
         localStorage.removeItem('rememberedEmail');
       }
 
-      // Navigate to dashboard
       navigate('/dashboard');
       
     } catch (err) {
       console.error('Login error:', err);
-      
-      // Handle different error types
-      let errorMessage = 'Login failed. Please try again.';
-      
-      if (err.message) {
-        errorMessage = err.message;
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (typeof err.response?.data === 'string') {
-        errorMessage = err.response.data;
-      }
-      
-      setError(errorMessage);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Load remembered email on component mount
   React.useEffect(() => {
     const remembered = localStorage.getItem('rememberMe');
     const email = localStorage.getItem('rememberedEmail');
@@ -102,19 +80,16 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-blue-600">StockMaster</h1>
           <p className="text-gray-500 mt-2">Inventory Management System</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">
             Welcome back
           </h2>
 
-          {/* Error Alert */}
           {error && (
             <Alert 
               variant="error" 
@@ -124,7 +99,6 @@ const Login = () => {
             />
           )}
 
-          {/* Email Input */}
           <Input
             label="Email"
             type="email"
@@ -137,7 +111,6 @@ const Login = () => {
             autoComplete="email"
           />
 
-          {/* Password Input */}
           <Input
             label="Password"
             type="password"
@@ -149,15 +122,13 @@ const Login = () => {
             autoComplete="current-password"
           />
 
-          {/* Remember Me & Forgot Password */}
           <div className="flex items-center justify-between mb-6">
             <label className="flex items-center cursor-pointer">
               <input 
                 type="checkbox" 
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 
-                         focus:ring-blue-500 focus:ring-2 mr-2" 
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 mr-2" 
               />
               <span className="text-sm text-gray-600">Remember me</span>
             </label>
@@ -169,7 +140,6 @@ const Login = () => {
             </Link>
           </div>
 
-          {/* Submit Button */}
           <Button 
             type="submit" 
             className="w-full" 
@@ -180,7 +150,6 @@ const Login = () => {
           </Button>
         </form>
 
-        {/* Sign Up Link */}
         <p className="text-center text-gray-600 mt-6">
           Don't have an account?{' '}
           <Link 
