@@ -1,6 +1,11 @@
 package com.stockmaster.dto;
+<<<<<<< HEAD
+//used to check health point
+public class AuthResponse {
+=======
 
 import lombok.Data;
+>>>>>>> 67a3605a06716f80cfda40e48f64028e49861b7e
 
 @Data
 public class AuthResponse {
