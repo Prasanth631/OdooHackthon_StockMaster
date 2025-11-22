@@ -1,5 +1,7 @@
 package com.stockmaster.repository;
 
-public class AdjustmentLineRepository {
-
+@Repository
+public interface AdjustmentLineRepository extends JpaRepository<AdjustmentLine, Long> {
+    List<AdjustmentLine> findByAdjustment(Adjustment adjustment);
+    List<AdjustmentLine> findByProduct(Product product);
 }

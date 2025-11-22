@@ -1,5 +1,7 @@
 package com.stockmaster.repository;
 
-public class TransferLineRepository {
-
+@Repository
+public interface TransferLineRepository extends JpaRepository<TransferLine, Long> {
+    List<TransferLine> findByTransfer(Transfer transfer);
+    List<TransferLine> findByProduct(Product product);
 }

@@ -1,5 +1,7 @@
 package com.stockmaster.repository;
 
-public class ReceiptLineRepository {
-
+@Repository
+public interface ReceiptLineRepository extends JpaRepository<ReceiptLine, Long> {
+    List<ReceiptLine> findByReceipt(Receipt receipt);
+    List<ReceiptLine> findByProduct(Product product);
 }
