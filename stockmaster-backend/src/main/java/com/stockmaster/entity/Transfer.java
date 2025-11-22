@@ -11,7 +11,127 @@ import java.util.List;
 @Data
 public class Transfer {
     
-    @Id
+    public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getTransferNumber() {
+		return transferNumber;
+	}
+
+	public void setTransferNumber(String transferNumber) {
+		this.transferNumber = transferNumber;
+	}
+
+	public Warehouse getSourceWarehouse() {
+		return sourceWarehouse;
+	}
+
+	public void setSourceWarehouse(Warehouse sourceWarehouse) {
+		this.sourceWarehouse = sourceWarehouse;
+	}
+
+	public Location getSourceLocation() {
+		return sourceLocation;
+	}
+
+	public void setSourceLocation(Location sourceLocation) {
+		this.sourceLocation = sourceLocation;
+	}
+
+	public Warehouse getDestinationWarehouse() {
+		return destinationWarehouse;
+	}
+
+	public void setDestinationWarehouse(Warehouse destinationWarehouse) {
+		this.destinationWarehouse = destinationWarehouse;
+	}
+
+	public Location getDestinationLocation() {
+		return destinationLocation;
+	}
+
+	public void setDestinationLocation(Location destinationLocation) {
+		this.destinationLocation = destinationLocation;
+	}
+
+	public Receipt.DocumentStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(Receipt.DocumentStatus status) {
+		this.status = status;
+	}
+
+	public LocalDateTime getScheduledDate() {
+		return scheduledDate;
+	}
+
+	public void setScheduledDate(LocalDateTime scheduledDate) {
+		this.scheduledDate = scheduledDate;
+	}
+
+	public LocalDateTime getTransferredDate() {
+		return transferredDate;
+	}
+
+	public void setTransferredDate(LocalDateTime transferredDate) {
+		this.transferredDate = transferredDate;
+	}
+
+	public User getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(User createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public User getValidatedBy() {
+		return validatedBy;
+	}
+
+	public void setValidatedBy(User validatedBy) {
+		this.validatedBy = validatedBy;
+	}
+
+	public List<TransferLine> getLines() {
+		return lines;
+	}
+
+	public void setLines(List<TransferLine> lines) {
+		this.lines = lines;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     

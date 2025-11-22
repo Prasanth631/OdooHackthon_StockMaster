@@ -1,24 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useContext } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import Sidebar from './components/common/Sidebar';
+import Navbar from './components/common/Navbar';
+import AppRoutes from './routes/AppRoutes';
+
+const AppLayout = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // If not authenticated, render routes without layout
+  if (!isAuthenticated) {
+    return <AppRoutes />;
+  }
+
+  // Authenticated layout
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+        
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <AppRoutes />
+        </main>
+      </div>
+    </div>
+  );
+};
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppLayout />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

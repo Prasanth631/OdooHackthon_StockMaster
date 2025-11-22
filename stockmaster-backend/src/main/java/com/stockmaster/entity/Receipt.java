@@ -11,7 +11,127 @@ import java.util.List;
 @Data
 public class Receipt {
     
-    @Id
+    public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getReceiptNumber() {
+		return receiptNumber;
+	}
+
+	public void setReceiptNumber(String receiptNumber) {
+		this.receiptNumber = receiptNumber;
+	}
+
+	public Warehouse getWarehouse() {
+		return warehouse;
+	}
+
+	public void setWarehouse(Warehouse warehouse) {
+		this.warehouse = warehouse;
+	}
+
+	public Location getLocation() {
+		return location;
+	}
+
+	public void setLocation(Location location) {
+		this.location = location;
+	}
+
+	public String getSupplierName() {
+		return supplierName;
+	}
+
+	public void setSupplierName(String supplierName) {
+		this.supplierName = supplierName;
+	}
+
+	public String getSupplierReference() {
+		return supplierReference;
+	}
+
+	public void setSupplierReference(String supplierReference) {
+		this.supplierReference = supplierReference;
+	}
+
+	public DocumentStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(DocumentStatus status) {
+		this.status = status;
+	}
+
+	public LocalDateTime getScheduledDate() {
+		return scheduledDate;
+	}
+
+	public void setScheduledDate(LocalDateTime scheduledDate) {
+		this.scheduledDate = scheduledDate;
+	}
+
+	public LocalDateTime getReceivedDate() {
+		return receivedDate;
+	}
+
+	public void setReceivedDate(LocalDateTime receivedDate) {
+		this.receivedDate = receivedDate;
+	}
+
+	public User getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(User createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public User getValidatedBy() {
+		return validatedBy;
+	}
+
+	public void setValidatedBy(User validatedBy) {
+		this.validatedBy = validatedBy;
+	}
+
+	public List<ReceiptLine> getLines() {
+		return lines;
+	}
+
+	public void setLines(List<ReceiptLine> lines) {
+		this.lines = lines;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
