@@ -10,7 +10,79 @@ import java.time.LocalDateTime;
 @Data
 public class ReorderRule {
     
-    @Id
+    public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Product getProduct() {
+		return product;
+	}
+
+	public void setProduct(Product product) {
+		this.product = product;
+	}
+
+	public Warehouse getWarehouse() {
+		return warehouse;
+	}
+
+	public void setWarehouse(Warehouse warehouse) {
+		this.warehouse = warehouse;
+	}
+
+	public BigDecimal getMinQuantity() {
+		return minQuantity;
+	}
+
+	public void setMinQuantity(BigDecimal minQuantity) {
+		this.minQuantity = minQuantity;
+	}
+
+	public BigDecimal getMaxQuantity() {
+		return maxQuantity;
+	}
+
+	public void setMaxQuantity(BigDecimal maxQuantity) {
+		this.maxQuantity = maxQuantity;
+	}
+
+	public BigDecimal getReorderQuantity() {
+		return reorderQuantity;
+	}
+
+	public void setReorderQuantity(BigDecimal reorderQuantity) {
+		this.reorderQuantity = reorderQuantity;
+	}
+
+	public Boolean getActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     

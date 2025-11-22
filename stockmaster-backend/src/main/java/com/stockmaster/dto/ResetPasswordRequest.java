@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Data
-public class AuthRequest {
+public class ResetPasswordRequest {
     public String getEmail() {
 		return email;
 	}
@@ -15,12 +15,20 @@ public class AuthRequest {
 		this.email = email;
 	}
 
-	public String getPassword() {
-		return password;
+	public String getOtp() {
+		return otp;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setOtp(String otp) {
+		this.otp = otp;
+	}
+
+	public String getNewPassword() {
+		return newPassword;
+	}
+
+	public void setNewPassword(String newPassword) {
+		this.newPassword = newPassword;
 	}
 
 	@NotBlank
@@ -28,6 +36,9 @@ public class AuthRequest {
     private String email;
 
     @NotBlank
+    private String otp;
+
+    @NotBlank
     @Size(min = 6)
-    private String password;
+    private String newPassword;
 }

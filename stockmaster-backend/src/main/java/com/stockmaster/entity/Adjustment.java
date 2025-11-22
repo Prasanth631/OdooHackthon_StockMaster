@@ -11,7 +11,119 @@ import java.util.List;
 @Data
 public class Adjustment {
     
-    @Id
+    public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getAdjustmentNumber() {
+		return adjustmentNumber;
+	}
+
+	public void setAdjustmentNumber(String adjustmentNumber) {
+		this.adjustmentNumber = adjustmentNumber;
+	}
+
+	public Warehouse getWarehouse() {
+		return warehouse;
+	}
+
+	public void setWarehouse(Warehouse warehouse) {
+		this.warehouse = warehouse;
+	}
+
+	public Location getLocation() {
+		return location;
+	}
+
+	public void setLocation(Location location) {
+		this.location = location;
+	}
+
+	public AdjustmentType getType() {
+		return type;
+	}
+
+	public void setType(AdjustmentType type) {
+		this.type = type;
+	}
+
+	public Receipt.DocumentStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(Receipt.DocumentStatus status) {
+		this.status = status;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+
+	public LocalDateTime getAdjustmentDate() {
+		return adjustmentDate;
+	}
+
+	public void setAdjustmentDate(LocalDateTime adjustmentDate) {
+		this.adjustmentDate = adjustmentDate;
+	}
+
+	public User getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(User createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public User getValidatedBy() {
+		return validatedBy;
+	}
+
+	public void setValidatedBy(User validatedBy) {
+		this.validatedBy = validatedBy;
+	}
+
+	public List<AdjustmentLine> getLines() {
+		return lines;
+	}
+
+	public void setLines(List<AdjustmentLine> lines) {
+		this.lines = lines;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
