@@ -1,118 +1,157 @@
-import productService from './productService';
-import { generateDocumentNumber } from '../utils/helpers';
-
-let deliveries = [
-  {
-    id: 1,
-    documentNumber: 'DEL-00000001',
-    customer: 'ABC Construction',
-    warehouse: 'Main Warehouse',
-    status: 'done',
-    items: [{ productId: 1, productName: 'Steel Rods', quantity: 50, unit: 'kg' }],
-    createdAt: '2024-01-16T14:00:00Z',
-    validatedAt: '2024-01-16T15:30:00Z',
-    notes: 'Urgent delivery'
-  },
-  {
-    id: 2,
-    documentNumber: 'DEL-00000002',
-    customer: 'XYZ Office Solutions',
-    warehouse: 'Main Warehouse',
-    status: 'ready',
-    items: [{ productId: 2, productName: 'Office Chair', quantity: 10, unit: 'pcs' }],
-    createdAt: '2024-01-19T10:00:00Z',
-    validatedAt: null,
-    notes: 'Pack with care'
-  }
-];
+// src/services/deliveryService.js
+import api from './api';
 
 const deliveryService = {
   getAll: async (filters = {}) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let filtered = [...deliveries];
-        if (filters.status) {
-          filtered = filtered.filter(d => d.status === filters.status);
-        }
-        resolve({ data: filtered });
-      }, 300);
-    });
+    try {
+      const response = await api.get('/deliveries');
+      let deliveries = response.data;
+      
+      // Apply status filter if provided
+      if (filters.status) {
+        deliveries = deliveries.filter(d => 
+          d.status.toLowerCase() === filters.status.toLowerCase()
+        );
+      }
+      
+      // Map backend response to frontend format
+      const mapped = deliveries.map(d => ({
+        id: d.id,
+        documentNumber: d.deliveryNumber,
+        customer: d.customerName,
+        warehouse: d.warehouse?.name || d.warehouseName || 'N/A',
+        status: d.status.toLowerCase(),
+        items: (d.lines || []).map(line => ({
+          productId: line.productId,
+          productName: line.productName,
+          quantity: line.quantityDelivered,
+          unit: line.product?.unitOfMeasure || 'pcs'
+        })),
+        createdAt: d.createdAt,
+        validatedAt: d.deliveredDate,
+        notes: d.notes || ''
+      }));
+      
+      return { data: mapped };
+    } catch (error) {
+      console.error('Failed to fetch deliveries:', error);
+      throw error;
+    }
   },
 
   getById: async (id) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const delivery = deliveries.find(d => d.id === parseInt(id));
-        if (delivery) resolve({ data: delivery });
-        else reject(new Error('Delivery not found'));
-      }, 200);
-    });
+    try {
+      const response = await api.get(`/deliveries/${id}`);
+      const d = response.data;
+      
+      return {
+        data: {
+          id: d.id,
+          documentNumber: d.deliveryNumber,
+          customer: d.customerName,
+          warehouse: d.warehouse?.name || d.warehouseName || 'N/A',
+          status: d.status.toLowerCase(),
+          items: (d.lines || []).map(line => ({
+            productId: line.productId,
+            productName: line.productName,
+            quantity: line.quantityDelivered,
+            unit: line.product?.unitOfMeasure || 'pcs'
+          })),
+          createdAt: d.createdAt,
+          validatedAt: d.deliveredDate,
+          notes: d.notes || ''
+        }
+      };
+    } catch (error) {
+      console.error('Failed to fetch delivery:', error);
+      throw error;
+    }
   },
 
   create: async (deliveryData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newDelivery = {
-          id: deliveries.length + 1,
-          documentNumber: generateDocumentNumber('delivery'),
-          ...deliveryData,
-          status: 'draft',
-          createdAt: new Date().toISOString(),
-          validatedAt: null
-        };
-        deliveries.push(newDelivery);
-        resolve({ data: newDelivery });
-      }, 300);
-    });
+    try {
+      // Backend expects Delivery entity structure
+      const payload = {
+        customerName: deliveryData.customer,
+        customerReference: '',
+        shippingAddress: '',
+        warehouse: { id: 1 }, // You'll need to get actual warehouse ID
+        location: null,
+        notes: deliveryData.notes || '',
+        lines: deliveryData.items.map(item => ({
+          product: { id: item.productId },
+          quantityOrdered: item.quantity,
+          quantityDelivered: item.quantity,
+          unitPrice: 0
+        }))
+      };
+      
+      const response = await api.post('/deliveries', payload);
+      return response;
+    } catch (error) {
+      console.error('Failed to create delivery:', error);
+      throw error;
+    }
   },
 
   update: async (id, deliveryData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = deliveries.findIndex(d => d.id === parseInt(id));
-        if (index !== -1) {
-          deliveries[index] = { ...deliveries[index], ...deliveryData };
-          resolve({ data: deliveries[index] });
-        }
-      }, 300);
-    });
+    try {
+      const response = await api.put(`/deliveries/${id}`, deliveryData);
+      return response;
+    } catch (error) {
+      console.error('Failed to update delivery:', error);
+      throw error;
+    }
   },
 
   updateStatus: async (id, status) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const delivery = deliveries.find(d => d.id === parseInt(id));
-        if (delivery) {
-          delivery.status = status;
-          resolve({ data: delivery });
-        }
-      }, 300);
-    });
+    try {
+      // For simple status updates, you might need to fetch then update
+      const delivery = await api.get(`/deliveries/${id}`);
+      delivery.data.status = status.toUpperCase();
+      const response = await api.put(`/deliveries/${id}`, delivery.data);
+      return response;
+    } catch (error) {
+      console.error('Failed to update delivery status:', error);
+      throw error;
+    }
   },
 
   validate: async (id) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const delivery = deliveries.find(d => d.id === parseInt(id));
-        if (delivery) {
-          delivery.status = 'done';
-          delivery.validatedAt = new Date().toISOString();
-          delivery.items.forEach(item => {
-            productService.updateStock(item.productId, -item.quantity);
-          });
-          resolve({ data: delivery });
-        }
-      }, 300);
-    });
+    try {
+      // Get current user ID from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user.id || 1;
+      
+      const response = await api.post(`/deliveries/${id}/validate?userId=${userId}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to validate delivery:', error);
+      throw error;
+    }
   },
 
   getPending: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const pending = deliveries.filter(d => d.status !== 'done' && d.status !== 'canceled');
-        resolve({ data: pending });
-      }, 200);
-    });
+    try {
+      const response = await api.get('/deliveries');
+      const pending = response.data.filter(d => 
+        d.status === 'WAITING' || d.status === 'READY' || d.status === 'DRAFT'
+      );
+      return { data: pending };
+    } catch (error) {
+      console.error('Failed to fetch pending deliveries:', error);
+      return { data: [] };
+    }
+  },
+
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/deliveries/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to delete delivery:', error);
+      throw error;
+    }
   }
 };
 

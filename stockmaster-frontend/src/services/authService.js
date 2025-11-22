@@ -1,70 +1,63 @@
+// src/services/authService.js
+import api from './api';
+
 const authService = {
   login: async (email, password) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            user: {
-              id: 1,
-              name: 'Demo User',
-              email: email,
-              role: 'inventory_manager'
-            },
-            token: 'demo-token-12345'
-          }
-        });
-      }, 500);
-    });
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
   signup: async (userData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: {
-            user: {
-              id: 1,
-              name: userData.name,
-              email: userData.email,
-              role: 'inventory_manager'
-            },
-            token: 'demo-token-12345'
-          }
-        });
-      }, 500);
-    });
+    try {
+      const response = await api.post('/auth/signup', {
+        email: userData.email,
+        password: userData.password,
+        fullName: userData.name,
+        role: userData.role || 'WAREHOUSE_STAFF'
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
   forgotPassword: async (email) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { message: 'OTP sent to email' } });
-      }, 500);
-    });
-  },
-
-  verifyOTP: async (email, otp) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { verified: true } });
-      }, 500);
-    });
+    try {
+      const response = await api.post('/auth/forgot-password', { email });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
   resetPassword: async (email, otp, newPassword) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { message: 'Password reset successful' } });
-      }, 500);
-    });
+    try {
+      const response = await api.post('/auth/reset-password', { 
+        email, 
+        otp, 
+        newPassword 
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   },
 
   changePassword: async (currentPassword, newPassword) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { message: 'Password changed successfully' } });
-      }, 500);
-    });
+    try {
+      // This endpoint might need to be added to your backend
+      const response = await api.post('/auth/change-password', { 
+        currentPassword, 
+        newPassword 
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

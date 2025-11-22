@@ -1,118 +1,127 @@
-import productService from './productService';
-import { generateDocumentNumber } from '../utils/helpers';
-
-let receipts = [
-  {
-    id: 1,
-    documentNumber: 'RCP-00000001',
-    supplier: 'Steel Corp Ltd',
-    warehouse: 'Main Warehouse',
-    status: 'done',
-    items: [{ productId: 1, productName: 'Steel Rods', quantity: 100, unit: 'kg' }],
-    createdAt: '2024-01-15T10:30:00Z',
-    validatedAt: '2024-01-15T11:00:00Z',
-    notes: 'Regular monthly supply'
-  },
-  {
-    id: 2,
-    documentNumber: 'RCP-00000002',
-    supplier: 'Office Supplies Inc',
-    warehouse: 'Main Warehouse',
-    status: 'waiting',
-    items: [{ productId: 2, productName: 'Office Chair', quantity: 20, unit: 'pcs' }],
-    createdAt: '2024-01-18T09:00:00Z',
-    validatedAt: null,
-    notes: ''
-  }
-];
+// src/services/receiptService.js
+import api from './api';
 
 const receiptService = {
   getAll: async (filters = {}) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let filtered = [...receipts];
-        if (filters.status) {
-          filtered = filtered.filter(r => r.status === filters.status);
-        }
-        resolve({ data: filtered });
-      }, 300);
-    });
+    try {
+      const response = await api.get('/receipts');
+      let receipts = response.data;
+      
+      // Apply status filter if provided
+      if (filters.status) {
+        receipts = receipts.filter(r => 
+          r.status.toLowerCase() === filters.status.toLowerCase()
+        );
+      }
+      
+      // Map backend response to frontend format
+      const mapped = receipts.map(r => ({
+        id: r.id,
+        documentNumber: r.receiptNumber,
+        supplier: r.supplierName,
+        warehouse: r.warehouse?.name || r.warehouseName || 'N/A',
+        status: r.status.toLowerCase(),
+        items: r.lines || [],
+        createdAt: r.createdAt,
+        validatedAt: r.receivedDate,
+        notes: r.notes || ''
+      }));
+      
+      return { data: mapped };
+    } catch (error) {
+      console.error('Failed to fetch receipts:', error);
+      throw error;
+    }
   },
 
   getById: async (id) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const receipt = receipts.find(r => r.id === parseInt(id));
-        if (receipt) resolve({ data: receipt });
-        else reject(new Error('Receipt not found'));
-      }, 200);
-    });
+    try {
+      const response = await api.get(`/receipts/${id}`);
+      const r = response.data;
+      
+      return {
+        data: {
+          id: r.id,
+          documentNumber: r.receiptNumber,
+          supplier: r.supplierName,
+          warehouse: r.warehouse?.name || r.warehouseName || 'N/A',
+          status: r.status.toLowerCase(),
+          items: (r.lines || []).map(line => ({
+            productId: line.productId,
+            productName: line.productName,
+            quantity: line.quantityReceived,
+            unit: line.product?.unitOfMeasure || 'pcs'
+          })),
+          createdAt: r.createdAt,
+          validatedAt: r.receivedDate,
+          notes: r.notes || ''
+        }
+      };
+    } catch (error) {
+      console.error('Failed to fetch receipt:', error);
+      throw error;
+    }
   },
 
   create: async (receiptData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newReceipt = {
-          id: receipts.length + 1,
-          documentNumber: generateDocumentNumber('receipt'),
-          ...receiptData,
-          status: 'draft',
-          createdAt: new Date().toISOString(),
-          validatedAt: null
-        };
-        receipts.push(newReceipt);
-        resolve({ data: newReceipt });
-      }, 300);
-    });
-  },
-
-  update: async (id, receiptData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = receipts.findIndex(r => r.id === parseInt(id));
-        if (index !== -1) {
-          receipts[index] = { ...receipts[index], ...receiptData };
-          resolve({ data: receipts[index] });
-        }
-      }, 300);
-    });
+    try {
+      // Create receipt with lines - backend expects Receipt entity structure
+      const payload = {
+        supplierName: receiptData.supplier,
+        warehouse: { id: 1 }, // You'll need to get actual warehouse ID
+        notes: receiptData.notes || '',
+        lines: receiptData.items.map(item => ({
+          product: { id: item.productId },
+          quantityOrdered: item.quantity,
+          quantityReceived: item.quantity,
+          unitPrice: 0
+        }))
+      };
+      
+      const response = await api.post('/receipts', payload);
+      return response;
+    } catch (error) {
+      console.error('Failed to create receipt:', error);
+      throw error;
+    }
   },
 
   validate: async (id) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const receipt = receipts.find(r => r.id === parseInt(id));
-        if (receipt) {
-          receipt.status = 'done';
-          receipt.validatedAt = new Date().toISOString();
-          receipt.items.forEach(item => {
-            productService.updateStock(item.productId, item.quantity);
-          });
-          resolve({ data: receipt });
-        }
-      }, 300);
-    });
+    try {
+      // Get current user ID from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user.id || 1;
+      
+      const response = await api.post(`/receipts/${id}/validate?userId=${userId}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to validate receipt:', error);
+      throw error;
+    }
   },
 
   cancel: async (id) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const receipt = receipts.find(r => r.id === parseInt(id));
-        if (receipt) {
-          receipt.status = 'canceled';
-          resolve({ data: receipt });
-        }
-      }, 300);
-    });
+    try {
+      // Backend doesn't have a cancel endpoint, use delete
+      const response = await api.delete(`/receipts/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to cancel receipt:', error);
+      throw error;
+    }
   },
 
   getPending: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const pending = receipts.filter(r => r.status === 'waiting' || r.status === 'draft');
-        resolve({ data: pending });
-      }, 200);
-    });
+    try {
+      const response = await api.get('/receipts');
+      const pending = response.data.filter(r => 
+        r.status === 'WAITING' || r.status === 'DRAFT'
+      );
+      return { data: pending };
+    } catch (error) {
+      console.error('Failed to fetch pending receipts:', error);
+      return { data: [] };
+    }
   }
 };
 

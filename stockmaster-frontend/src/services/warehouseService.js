@@ -1,61 +1,104 @@
-let warehouses = [
-  { id: 1, name: 'Main Warehouse', address: '123 Industrial Ave', isActive: true },
-  { id: 2, name: 'Production Floor', address: '123 Industrial Ave - Floor 2', isActive: true },
-  { id: 3, name: 'Warehouse B', address: '456 Storage Blvd', isActive: true }
-];
+// src/services/warehouseService.js
+import api from './api';
 
 const warehouseService = {
   getAll: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: warehouses });
-      }, 200);
-    });
+    try {
+      const response = await api.get('/warehouses');
+      
+      // Map backend response to frontend format
+      const mapped = response.data.map(w => ({
+        id: w.id,
+        name: w.name,
+        address: `${w.address || ''}, ${w.city || ''}, ${w.state || ''}`.trim(),
+        code: w.code,
+        city: w.city,
+        state: w.state,
+        zipCode: w.zipCode,
+        country: w.country,
+        isActive: w.active
+      }));
+      
+      return { data: mapped };
+    } catch (error) {
+      console.error('Failed to fetch warehouses:', error);
+      throw error;
+    }
   },
 
   getById: async (id) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const warehouse = warehouses.find(w => w.id === parseInt(id));
-        if (warehouse) resolve({ data: warehouse });
-        else reject(new Error('Warehouse not found'));
-      }, 200);
-    });
+    try {
+      const response = await api.get(`/warehouses/${id}`);
+      const w = response.data;
+      
+      return {
+        data: {
+          id: w.id,
+          name: w.name,
+          address: w.address,
+          code: w.code,
+          city: w.city,
+          state: w.state,
+          zipCode: w.zipCode,
+          country: w.country,
+          isActive: w.active
+        }
+      };
+    } catch (error) {
+      console.error('Failed to fetch warehouse:', error);
+      throw error;
+    }
   },
 
   create: async (warehouseData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newWarehouse = {
-          id: warehouses.length + 1,
-          ...warehouseData,
-          isActive: true
-        };
-        warehouses.push(newWarehouse);
-        resolve({ data: newWarehouse });
-      }, 300);
-    });
+    try {
+      const payload = {
+        name: warehouseData.name,
+        code: `WH-${Date.now().toString().slice(-6)}`, // Generate code
+        address: warehouseData.address,
+        city: warehouseData.city || '',
+        state: warehouseData.state || '',
+        zipCode: warehouseData.zipCode || '',
+        country: warehouseData.country || 'USA',
+        active: true
+      };
+      
+      const response = await api.post('/warehouses', payload);
+      return response;
+    } catch (error) {
+      console.error('Failed to create warehouse:', error);
+      throw error;
+    }
   },
 
   update: async (id, warehouseData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const index = warehouses.findIndex(w => w.id === parseInt(id));
-        if (index !== -1) {
-          warehouses[index] = { ...warehouses[index], ...warehouseData };
-          resolve({ data: warehouses[index] });
-        }
-      }, 300);
-    });
+    try {
+      const payload = {
+        name: warehouseData.name,
+        address: warehouseData.address,
+        city: warehouseData.city || '',
+        state: warehouseData.state || '',
+        zipCode: warehouseData.zipCode || '',
+        country: warehouseData.country || 'USA',
+        active: warehouseData.isActive !== undefined ? warehouseData.isActive : true
+      };
+      
+      const response = await api.put(`/warehouses/${id}`, payload);
+      return response;
+    } catch (error) {
+      console.error('Failed to update warehouse:', error);
+      throw error;
+    }
   },
 
   delete: async (id) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        warehouses = warehouses.filter(w => w.id !== parseInt(id));
-        resolve({ data: { success: true } });
-      }, 300);
-    });
+    try {
+      const response = await api.delete(`/warehouses/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Failed to delete warehouse:', error);
+      throw error;
+    }
   }
 };
 

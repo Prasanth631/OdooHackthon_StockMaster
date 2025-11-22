@@ -1,3 +1,4 @@
+// src/components/auth/Signup.js
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -11,28 +12,76 @@ const Signup = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'WAREHOUSE_STAFF'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('');
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
+
+    // Check password strength
+    if (name === 'password') {
+      checkPasswordStrength(value);
+    }
+  };
+
+  const checkPasswordStrength = (password) => {
+    if (!password) {
+      setPasswordStrength('');
+      return;
+    }
+
+    if (password.length < 6) {
+      setPasswordStrength('weak');
+    } else if (password.length < 8) {
+      setPasswordStrength('medium');
+    } else if (password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)) {
+      setPasswordStrength('strong');
+    } else {
+      setPasswordStrength('medium');
+    }
+  };
+
+  const validateForm = () => {
+    // Validate name
+    if (!formData.name || formData.name.trim().length < 2) {
+      setError('Please enter a valid full name (minimum 2 characters)');
+      return false;
+    }
+
+    // Validate email
+    if (!formData.email || !formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Validate password
+    if (!formData.password || formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    // Validate form
+    if (!validateForm()) {
       return;
     }
 
@@ -40,31 +89,83 @@ const Signup = () => {
     setError('');
 
     try {
+      // Call backend API - backend expects: { email, password, fullName, role }
       const response = await authService.signup({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        role: formData.role
       });
-      login(response.data.user, response.data.token);
+
+      // Backend returns: { userId, email, fullName, role, token }
+      const { token, ...userData } = response.data;
+
+      // Update context with user data and token
+      login(userData, token);
+
+      // Navigate to dashboard
       navigate('/dashboard');
+      
     } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+      console.error('Signup error:', err);
+      
+      // Handle different error types
+      let errorMessage = 'Signup failed. Please try again.';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (typeof err.response?.data === 'string') {
+        errorMessage = err.response.data;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getPasswordStrengthColor = () => {
+    switch (passwordStrength) {
+      case 'weak': return 'bg-red-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'strong': return 'bg-green-500';
+      default: return 'bg-gray-300';
+    }
+  };
+
+  const getPasswordStrengthWidth = () => {
+    switch (passwordStrength) {
+      case 'weak': return 'w-1/3';
+      case 'medium': return 'w-2/3';
+      case 'strong': return 'w-full';
+      default: return 'w-0';
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 py-8">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+        {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-blue-600">StockMaster</h1>
           <p className="text-gray-500 mt-2">Create your account</p>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
-          {error && <Alert variant="error" message={error} className="mb-4" />}
+          {/* Error Alert */}
+          {error && (
+            <Alert 
+              variant="error" 
+              message={error} 
+              onClose={() => setError('')}
+              className="mb-4" 
+            />
+          )}
 
+          {/* Full Name Input */}
           <Input
             label="Full Name"
             name="name"
@@ -72,8 +173,11 @@ const Signup = () => {
             onChange={handleChange}
             placeholder="Enter your full name"
             required
+            autoFocus
+            autoComplete="name"
           />
 
+          {/* Email Input */}
           <Input
             label="Email"
             type="email"
@@ -82,18 +186,63 @@ const Signup = () => {
             onChange={handleChange}
             placeholder="Enter your email"
             required
+            autoComplete="email"
           />
 
+          {/* Role Selection */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Role <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 
+                       focus:border-transparent"
+              required
+            >
+              <option value="WAREHOUSE_STAFF">Warehouse Staff</option>
+              <option value="INVENTORY_MANAGER">Inventory Manager</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+
+          {/* Password Input */}
           <Input
             label="Password"
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Create a password"
+            placeholder="Create a password (min 6 characters)"
             required
+            autoComplete="new-password"
           />
 
+          {/* Password Strength Indicator */}
+          {formData.password && (
+            <div className="mb-4 -mt-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-500">Password strength:</span>
+                <span className={`text-xs font-medium capitalize ${
+                  passwordStrength === 'weak' ? 'text-red-600' :
+                  passwordStrength === 'medium' ? 'text-yellow-600' :
+                  passwordStrength === 'strong' ? 'text-green-600' : 'text-gray-600'
+                }`}>
+                  {passwordStrength}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-300 ${getPasswordStrengthColor()} ${getPasswordStrengthWidth()}`}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Confirm Password Input */}
           <Input
             label="Confirm Password"
             type="password"
@@ -102,18 +251,38 @@ const Signup = () => {
             onChange={handleChange}
             placeholder="Confirm your password"
             required
+            autoComplete="new-password"
           />
 
-          <Button type="submit" className="w-full mt-2" loading={loading}>
-            Create Account
+          {/* Submit Button */}
+          <Button 
+            type="submit" 
+            className="w-full mt-2" 
+            loading={loading}
+            disabled={loading || !formData.name || !formData.email || 
+                     !formData.password || !formData.confirmPassword}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
 
+        {/* Login Link */}
         <p className="text-center text-gray-600 mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline font-medium">
+          <Link 
+            to="/login" 
+            className="text-blue-600 hover:text-blue-800 font-medium"
+          >
             Sign in
           </Link>
+        </p>
+
+        {/* Terms Notice */}
+        <p className="text-xs text-gray-500 text-center mt-4">
+          By creating an account, you agree to our{' '}
+          <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+          {' '}and{' '}
+          <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
         </p>
       </div>
     </div>
