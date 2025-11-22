@@ -1,5 +1,7 @@
 package com.stockmaster.repository;
 
+import org.springframework.stereotype.Repository;
+
 @Repository
 public interface AdjustmentRepository extends JpaRepository<Adjustment, Long> {
     Optional<Adjustment> findByAdjustmentNumber(String adjustmentNumber);

@@ -1,5 +1,16 @@
 package com.stockmaster.repository;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.stockmaster.entity.Receipt;
+import com.stockmaster.entity.Transfer;
+import com.stockmaster.entity.Warehouse;
+
 @Repository
 public interface TransferRepository extends JpaRepository<Transfer, Long> {
     Optional<Transfer> findByTransferNumber(String transferNumber);
